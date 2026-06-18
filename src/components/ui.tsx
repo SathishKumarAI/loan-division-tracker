@@ -115,11 +115,14 @@ const badBorder = 'border-negative focus:border-negative'
 
 export function Input(props: InputHTMLAttributes<HTMLInputElement>) {
   const ctx = useContext(FieldContext)
-  const { className, id, name, ...rest } = props
+  const { className, id, name, autoComplete, ...rest } = props
   return (
     <input
       id={id ?? ctx.id}
       name={name ?? (props['aria-label'] as string) ?? ctx.id}
+      // These are loan figures/dates, not personal-profile fields — opt out of
+      // browser autofill rather than offer wrong suggestions.
+      autoComplete={autoComplete ?? 'off'}
       aria-invalid={ctx.invalid || undefined}
       aria-describedby={ctx.invalid ? ctx.errorId : undefined}
       {...rest}
@@ -130,11 +133,12 @@ export function Input(props: InputHTMLAttributes<HTMLInputElement>) {
 
 export function Select(props: SelectHTMLAttributes<HTMLSelectElement>) {
   const ctx = useContext(FieldContext)
-  const { className, id, name, ...rest } = props
+  const { className, id, name, autoComplete, ...rest } = props
   return (
     <select
       id={id ?? ctx.id}
       name={name ?? ctx.id}
+      autoComplete={autoComplete ?? 'off'}
       aria-invalid={ctx.invalid || undefined}
       {...rest}
       className={`${inputBase} ${ctx.invalid ? badBorder : okBorder} ${className ?? ''}`}

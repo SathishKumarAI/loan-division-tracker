@@ -26,14 +26,21 @@ export function simulatePrepayment(
     ...base,
     prepayments: [...(base.prepayments ?? []), prepayment],
   })
+  // The installment that absorbs the lump has its EMI inflated by the prepaid
+  // amount (emi = regular EMI + lump). The *new steady-state* EMI is the next
+  // regular installment after it, so report that.
+  const foldIdx = modified.rows.findIndex((r) => r.dueDate >= prepayment.date)
+  const steady =
+    (foldIdx >= 0 ? modified.rows.slice(foldIdx + 1) : modified.rows).find((r) => !r.isFinal) ??
+    modified.rows[foldIdx] ??
+    modified.rows[0]
+
   return {
     baseline,
     modified,
     interestSaved: money(D(baseline.totalInterest).minus(modified.totalInterest)),
     monthsSaved: baseline.actualTenureMonths - modified.actualTenureMonths,
-    newEmi:
-      modified.rows.find((r) => r.dueDate >= prepayment.date && !r.isFinal)?.emi ??
-      modified.firstEmi,
+    newEmi: steady?.emi ?? modified.firstEmi,
     newTenureMonths: modified.actualTenureMonths,
   }
 }

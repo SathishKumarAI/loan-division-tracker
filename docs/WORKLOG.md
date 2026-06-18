@@ -1,5 +1,18 @@
 # Worklog
 
+## 2026-06-18 12:45 — Full-feature test pass + fixes (T-012)
+
+**Summary:** Restarted the local app and exercised every page/feature in a real browser. All 9 pages load with a clean console. Found and fixed one real bug and one best-practice notice; verified recorded payments flow into per-person schedules. 43 tests green.
+
+**Changes:**
+- **Fix — prepayment New EMI** (`src/engine/prepayment.ts`): the what-if showed the lump-inflated installment (regular EMI + prepaid amount, ~₹5,22,092) instead of the steady-state EMI (~₹22,092). Now reports the first regular installment after the fold. +1 regression assertion in `engine.test.ts`.
+- **Fix — autocomplete notice** (`src/components/ui.tsx`): `Input`/`Select` default to `autocomplete="off"`; cleared the Chrome console notice.
+
+**Verified in-browser:**
+- All tabs render (Dashboard/People/Loan Setup/Schedule/Payments/Scenarios/Import/Reports/History); lazy chunks load; console clean.
+- T-005 live: recording a ₹5L prepayment for Asha shortened her schedule 240→149 installments in People; Bala/Chitra unchanged.
+- New EMI now ₹22,092.77 (was ₹5,22,092.77).
+
 ## 2026-06-18 11:57 — Close remaining follow-ups (T-005/006/007) + ticket ledger
 
 **Summary:** Completed the three open follow-ups and started an append-only ticket ledger (`docs/TICKETS.md`). No deploy. 43 tests green; main bundle cut ~5× on gzip.

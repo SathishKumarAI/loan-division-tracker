@@ -283,6 +283,10 @@ describe('prepayment simulation', () => {
     expect(r.interestSaved).toBeGreaterThan(0)
     expect(r.monthsSaved).toBeGreaterThan(0)
     expect(r.modified.rows.at(-1)!.closingBalance).toBe(0)
+    // New EMI is the steady-state installment (≈ unchanged for tenure-reduction),
+    // NOT the lump-inflated row — must be far below the prepaid amount.
+    expect(r.newEmi).toBeCloseTo(r.baseline.firstEmi, 0)
+    expect(r.newEmi).toBeLessThan(50000)
   })
   it('reduce-EMI saves interest while keeping tenure roughly fixed', () => {
     const r = simulatePrepayment(

@@ -39,6 +39,13 @@ Status keys: `OPEN` · `IN PROGRESS` · `DONE` · `WON'T DO`
 
 ---
 
+### T-012 — Full-feature test pass + fixes
+- 2026-06-18 OPENED — exercise every page/feature in-browser, fix anything broken.
+- 2026-06-18 DONE — all 9 pages load (lazy chunks) with a clean console. Fixes:
+  (a) **Prepayment "New EMI" bug** — the what-if reported the lump-inflated installment (regular EMI + prepaid amount, e.g. ₹5,22,092) instead of the steady-state EMI; `simulatePrepayment` now reports the first regular installment after the fold (₹22,092). +1 regression assertion.
+  (b) **autocomplete notice** — `Input`/`Select` default to `autocomplete="off"` (loan figures aren't profile fields); cleared the Chrome console notice.
+  Verified: recorded ₹5L prepayment shortens Asha's schedule 240→149 installments in the People view (T-005 live). 43 tests green; main bundle ~85 KB gzip.
+
 ## Backlog (OPEN — not yet started)
 - 2026-06-18 OPEN — T-008: Optional cloud sync / multi-device (needs a backend; currently local-only by design).
 - 2026-06-18 OPEN — T-009: Configurable penal-charge engine (separate non-capitalized charges, per RBI 2024 rules).
