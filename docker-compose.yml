@@ -1,0 +1,37 @@
+# Loan Division Tracker — container stack.
+#
+# Today: a single static frontend service (data persists in the browser).
+# The `backend` service below is scaffolded but commented out — uncomment it
+# once the AI/PDF + server-side storage direction is chosen (see
+# docs/AI-AND-BACKEND.md). It is wired to a named volume so loan data and the
+# SQLite DB survive container restarts.
+
+services:
+  web:
+    build:
+      context: .
+      target: runtime
+    image: loan-division-tracker:latest
+    # Host 8090 (8080 may be taken by other local apps); change freely.
+    ports:
+      - "8090:80"
+    restart: unless-stopped
+
+  # backend:
+  #   build:
+  #     context: ./backend
+  #   environment:
+  #     # Choose ONE AI mode (see docs/AI-AND-BACKEND.md):
+  #     - AI_MODE=${AI_MODE:-claude_cli}        # claude_cli | anthropic_api | off
+  #     - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
+  #     - DB_PATH=/data/loan.db
+  #   volumes:
+  #     - loan-data:/data
+  #     # For AI_MODE=claude_cli, share the host Claude Code auth into the container:
+  #     # - ${HOME}/.claude:/root/.claude:ro
+  #   ports:
+  #     - "8000:8000"
+  #   restart: unless-stopped
+
+# volumes:
+#   loan-data:

@@ -46,6 +46,14 @@ Status keys: `OPEN` · `IN PROGRESS` · `DONE` · `WON'T DO`
   (b) **autocomplete notice** — `Input`/`Select` default to `autocomplete="off"` (loan figures aren't profile fields); cleared the Chrome console notice.
   Verified: recorded ₹5L prepayment shortens Asha's schedule 240→149 installments in the People view (T-005 live). 43 tests green; main bundle ~85 KB gzip.
 
+### T-013 — Dockerize the app
+- 2026-06-18 OPENED — containerized build + run.
+- 2026-06-18 DONE — multi-stage `Dockerfile` (node build → nginx static), `nginx.conf` (SPA fallback + immutable asset caching + gzip), `.dockerignore`, `docker-compose.yml`. Built (77 MB) and verified serving at host :8090 (8080/8081 taken by the bujo stack); container app renders the dashboard. `docker compose up -d`.
+
+### T-014 — Backend + AI PDF validation + server-side storage
+- 2026-06-18 OPENED — add a FastAPI backend that (a) persists datasets + AI "findings" to SQLite on a Docker volume, (b) sends bank PDFs to Claude (CLI subscription by default, Anthropic API as a switch) to extract + validate the rate timeline & conventions, feeding the parse-then-confirm UI. Design + options written to `docs/AI-AND-BACKEND.md`.
+- 2026-06-18 BLOCKED — awaiting user decision on AI mode (Claude CLI vs Anthropic API) and storage (backend SQLite vs keep local-only). Compose already scaffolds the `backend` service + volume + `AI_MODE`.
+
 ## Backlog (OPEN — not yet started)
 - 2026-06-18 OPEN — T-008: Optional cloud sync / multi-device (needs a backend; currently local-only by design).
 - 2026-06-18 OPEN — T-009: Configurable penal-charge engine (separate non-capitalized charges, per RBI 2024 rules).
