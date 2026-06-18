@@ -37,6 +37,7 @@
 
   /* Semantic */
   --color-primary: #1e66f5;
+  --color-oncolor: #ffffff; /* readable text on a primary-coloured fill */
   --color-principal: #1e66f5;
   --color-interest: #fe640b;
   --color-positive: #40a02b;
@@ -69,6 +70,7 @@
   --color-lavender: #b4befe;
 
   --color-primary: #89b4fa;
+  --color-oncolor: #11111b; /* dark text on the light-blue dark-mode primary */
   --color-principal: #89b4fa;
   --color-interest: #fab387;
   --color-positive: #a6e3a1;

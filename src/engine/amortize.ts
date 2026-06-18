@@ -332,9 +332,10 @@ function buildTrace(index: number, c: TraceCtx): RowTrace {
 }
 
 function findCrossover(rows: ScheduleRow[]): number | null {
-  // First installment where cumulative principal exceeds cumulative interest.
+  // First installment whose principal portion exceeds its interest portion —
+  // the point from which each EMI repays more principal than interest.
   for (const r of rows) {
-    if (r.cumulativePrincipal > r.cumulativeInterest) return r.index
+    if (r.principal > r.interest) return r.index
   }
   return null
 }

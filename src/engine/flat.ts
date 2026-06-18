@@ -80,7 +80,7 @@ export function amortizeFlat(input: FlatInput): Schedule {
     balance = closing
   }
 
-  const crossover = rows.find((r) => r.cumulativePrincipal > r.cumulativeInterest)
+  const crossover = rows.find((r) => r.principal > r.interest)
 
   return {
     rows,

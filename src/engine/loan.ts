@@ -15,6 +15,7 @@ import type {
   Borrower,
   Schedule,
   ScheduleRow,
+  RowTrace,
   BorrowerResult,
   LoanResult,
 } from './types'
@@ -51,37 +52,49 @@ export function computeBorrowerSchedule(
 function consolidate(results: BorrowerResult[]): Schedule {
   const maxLen = Math.max(0, ...results.map((r) => r.schedule.rows.length))
   const rows: ScheduleRow[] = []
+  const traces: RowTrace[] = []
   let cumI = D(0)
   let cumP = D(0)
 
   for (let k = 0; k < maxLen; k++) {
-    const parts = results.map((r) => r.schedule.rows[k]).filter(Boolean) as ScheduleRow[]
+    const parts = results
+      .map((r) => ({ name: r.borrower.name, row: r.schedule.rows[k] }))
+      .filter((p) => p.row) as { name: string; row: ScheduleRow }[]
     if (parts.length === 0) continue
-    const interest = sumMoney(parts.map((p) => p.interest))
-    const principal = sumMoney(parts.map((p) => p.principal))
+    const interest = sumMoney(parts.map((p) => p.row.interest))
+    const principal = sumMoney(parts.map((p) => p.row.principal))
     cumI = cumI.plus(interest)
     cumP = cumP.plus(principal)
+    traces.push({
+      index: k + 1,
+      formula: 'Consolidated row = sum of every person’s installment for this period',
+      steps: [
+        `EMI = ${parts.map((p) => `${p.name} ₹${p.row.emi.toFixed(2)}`).join(' + ')}`,
+        `Interest = ${parts.map((p) => `₹${p.row.interest.toFixed(2)}`).join(' + ')} = ₹${interest.toFixed(2)}`,
+        `Principal = ${parts.map((p) => `₹${p.row.principal.toFixed(2)}`).join(' + ')} = ₹${principal.toFixed(2)}`,
+      ],
+    })
     rows.push({
       index: k + 1,
-      dueDate: parts[0].dueDate,
-      annualRatePct: parts[0].annualRatePct,
-      monthlyRatePct: parts[0].monthlyRatePct,
-      openingBalance: sumMoney(parts.map((p) => p.openingBalance)),
-      emi: sumMoney(parts.map((p) => p.emi)),
+      dueDate: parts[0].row.dueDate,
+      annualRatePct: parts[0].row.annualRatePct,
+      monthlyRatePct: parts[0].row.monthlyRatePct,
+      openingBalance: sumMoney(parts.map((p) => p.row.openingBalance)),
+      emi: sumMoney(parts.map((p) => p.row.emi)),
       interest,
       principal,
-      closingBalance: sumMoney(parts.map((p) => p.closingBalance)),
-      rateChanged: parts.some((p) => p.rateChanged),
-      isFinal: parts.every((p) => p.isFinal),
+      closingBalance: sumMoney(parts.map((p) => p.row.closingBalance)),
+      rateChanged: parts.some((p) => p.row.rateChanged),
+      isFinal: parts.every((p) => p.row.isFinal),
       cumulativeInterest: money(cumI),
       cumulativePrincipal: money(cumP),
     })
   }
 
-  const crossover = rows.find((r) => r.cumulativePrincipal > r.cumulativeInterest)
+  const crossover = rows.find((r) => r.principal > r.interest)
   return {
     rows,
-    traces: [],
+    traces,
     principal: sumMoney(results.map((r) => r.schedule.principal)),
     totalInterest: money(cumI),
     totalPaid: money(cumI.plus(cumP)),
