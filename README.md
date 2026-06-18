@@ -32,6 +32,21 @@ npm test           # run the engine test suite (Vitest)
 npm run build      # type-check + production build to dist/
 ```
 
+### Run with Docker
+
+```bash
+docker compose up -d --build      # web → http://localhost:8090
+```
+
+This brings up two services:
+
+- **web** — the static SPA (nginx). Local-first; works on its own, data in the browser.
+- **backend** — FastAPI for **server-side storage** (SQLite on a named volume) and **Claude-powered PDF validation**. Optional and additive — the calculator works without it.
+
+The backend defaults to `AI_MODE=claude_cli`, reusing your host Claude Code login via a read-only `~/.claude` mount (no API key, no per-token billing). To use the API instead, copy `.env.example` → `.env` and set `AI_MODE=anthropic_api` + `ANTHROPIC_API_KEY`. Design and trade-offs: [`docs/AI-AND-BACKEND.md`](docs/AI-AND-BACKEND.md).
+
+When the backend is up, the **Import PDF** tab sends the document to Claude — which extracts the rate timeline *and reasons about it* (flags out-of-order dates, implausible jumps, missing interest-type/day-count/penalty terms), pre-filling the parse-then-confirm screen — and **Reports → Server storage** can save/load the dataset to the backend. With the backend down, Import falls back to the in-browser regex parser and storage stays local.
+
 ## Architecture
 
 - **React + TypeScript + Vite**, **Tailwind v4** (Catppuccin theme), **Zustand** state, **Recharts**, **decimal.js** for money, **SheetJS / jsPDF** for export, **pdf.js** for PDF ingestion.

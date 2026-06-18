@@ -1,10 +1,13 @@
 # Loan Division Tracker — container stack.
 #
-# Today: a single static frontend service (data persists in the browser).
-# The `backend` service below is scaffolded but commented out — uncomment it
-# once the AI/PDF + server-side storage direction is chosen (see
-# docs/AI-AND-BACKEND.md). It is wired to a named volume so loan data and the
-# SQLite DB survive container restarts.
+# - web:     static SPA (nginx). Local-first; works with or without the backend.
+# - backend: FastAPI — server-side dataset storage (SQLite on a volume) + Claude
+#            PDF analysis. AI_MODE selects the Claude transport.
+#
+# Bring up:  docker compose up -d --build
+# AI auth:   AI_MODE=claude_cli reuses your host Claude Code login via the
+#            read-only ~/.claude mount. For the API instead, set
+#            AI_MODE=anthropic_api and ANTHROPIC_API_KEY (e.g. in a .env file).
 
 services:
   web:
@@ -17,21 +20,23 @@ services:
       - "8090:80"
     restart: unless-stopped
 
-  # backend:
-  #   build:
-  #     context: ./backend
-  #   environment:
-  #     # Choose ONE AI mode (see docs/AI-AND-BACKEND.md):
-  #     - AI_MODE=${AI_MODE:-claude_cli}        # claude_cli | anthropic_api | off
-  #     - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
-  #     - DB_PATH=/data/loan.db
-  #   volumes:
-  #     - loan-data:/data
-  #     # For AI_MODE=claude_cli, share the host Claude Code auth into the container:
-  #     # - ${HOME}/.claude:/root/.claude:ro
-  #   ports:
-  #     - "8000:8000"
-  #   restart: unless-stopped
+  backend:
+    build:
+      context: ./backend
+    image: loan-division-tracker-backend:latest
+    environment:
+      - AI_MODE=${AI_MODE:-claude_cli}          # claude_cli | anthropic_api | off
+      - AI_MODEL=${AI_MODEL:-claude-opus-4-8}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
+      - DB_PATH=/data/loan.db
+      - CORS_ORIGINS=http://localhost:8090,http://localhost:5173
+    volumes:
+      - loan-data:/data
+      # AI_MODE=claude_cli reuses the host Claude Code login (read-only):
+      - ${HOME}/.claude:/root/.claude:ro
+    ports:
+      - "8000:8000"
+    restart: unless-stopped
 
-# volumes:
-#   loan-data:
+volumes:
+  loan-data:

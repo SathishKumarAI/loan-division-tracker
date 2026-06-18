@@ -1,5 +1,23 @@
 # Worklog
 
+## 2026-06-18 13:20 — Docker stack + backend (SQLite storage + Claude PDF validation)
+
+**Summary:** Containerized the app and added an optional FastAPI backend for server-side storage and Claude-powered PDF validation. Decisions (asked): Claude CLI (subscription) · backend SQLite on a volume · PDF as text + page images. Verified the full stack end-to-end in containers. No deploy — local Docker only.
+
+**Changes:**
+- **Docker (T-013):** multi-stage `Dockerfile` (node build → nginx), `nginx.conf` (SPA + immutable assets + gzip), `.dockerignore`, `docker-compose.yml` (web :8090 + backend :8000 + `loan-data` volume + read-only `~/.claude` mount). Built & verified.
+- **Backend (T-014):** `backend/` FastAPI — `db.py` (SQLite datasets + findings), `pdf.py` (PyMuPDF text + page PNGs), `ai.py` (Claude CLI subprocess default, Anthropic API switch), `main.py` (health, datasets CRUD, `/api/pdf/analyze`, findings). `backend/Dockerfile` (node base + Python + claude CLI).
+- **Frontend:** `src/lib/api.ts` client; `Import.tsx` now calls the AI backend (extract + reason + validate), shows Claude's summary/validation/conventions, applies detected conventions on accept, and falls back to the local regex parser when the backend is down; `Reports.tsx` Save/Load to server. `.env.example`; README + `docs/AI-AND-BACKEND.md`.
+
+**Verified in-browser/containers:**
+- `docker compose up -d --build` → web 8090 + backend 8000 healthy.
+- Upload sample PDF → Claude (via CLI in the container, host auth mounted) returned the 3-row timeline AND flagged mixed date formats + missing interest-type/day-count/principal/tenure/prepayment terms; finding stored.
+- Reports → Save to server persisted the dataset to SQLite on the volume; reload works.
+
+**Decisions:**
+- AI key never reaches the browser — backend holds it / uses the host Claude login; local mode keeps the PDF on-device.
+- App stays local-first: backend is additive; Import + storage degrade gracefully when it's off.
+
 ## 2026-06-18 12:45 — Full-feature test pass + fixes (T-012)
 
 **Summary:** Restarted the local app and exercised every page/feature in a real browser. All 9 pages load with a clean console. Found and fixed one real bug and one best-practice notice; verified recorded payments flow into per-person schedules. 43 tests green.

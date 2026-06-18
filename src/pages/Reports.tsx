@@ -1,9 +1,10 @@
-import { useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useLoanStore } from '../store/useLoanStore'
 import type { PersistedState } from '../store/useLoanStore'
 import { useUiStore } from '../store/useUiStore'
 import { useLoanResult } from '../lib/useLoanResult'
-import { Card, Button, Banner } from '../components/ui'
+import { backendHealthy, saveDataset, getDataset } from '../lib/api'
+import { Card, Button, Banner, Tag } from '../components/ui'
 import { formatINR, activeAnnualRate } from '../engine'
 import { cmpISO } from '../engine'
 import { exportStatementPDF, exportICS, exportJSON } from '../lib/export'
@@ -15,6 +16,39 @@ export function Reports() {
   const toast = useUiStore((s) => s.toast)
   const result = useLoanResult()
   const fileInput = useRef<HTMLInputElement>(null)
+  const [backendOk, setBackendOk] = useState(false)
+  const [syncing, setSyncing] = useState(false)
+
+  useEffect(() => {
+    backendHealthy().then((h) => setBackendOk(h.ok))
+  }, [])
+
+  const snapshotData = (): PersistedState => ({ loan, borrowers, payments, asOf, theme: store.theme })
+
+  const saveToServer = async () => {
+    setSyncing(true)
+    try {
+      await saveDataset('primary', 'Primary loan', snapshotData())
+      toast('Saved to server')
+    } catch (e) {
+      toast(`Save failed: ${e instanceof Error ? e.message : ''}`, 'error')
+    } finally {
+      setSyncing(false)
+    }
+  }
+
+  const loadFromServer = async () => {
+    setSyncing(true)
+    try {
+      const ds = await getDataset('primary')
+      importData(ds.data as PersistedState)
+      toast('Loaded from server')
+    } catch (e) {
+      toast(`Load failed: ${e instanceof Error ? e.message : 'no saved dataset'}`, 'error')
+    } finally {
+      setSyncing(false)
+    }
+  }
 
   const snapshotFor = (schedule: typeof result.borrowers[number]['schedule'], startDate: string) => {
     let interestPaid = 0
@@ -136,6 +170,28 @@ export function Reports() {
             due dates to Google / Apple / Outlook calendars instead.
           </Banner>
         </div>
+      </Card>
+
+      <Card
+        title="Server storage (optional backend)"
+        subtitle="Persist this dataset on the backend so it survives across browsers/devices"
+        actions={backendOk ? <Tag color="green">backend online</Tag> : <Tag color="overlay0">backend offline</Tag>}
+      >
+        {backendOk ? (
+          <div className="flex flex-wrap gap-2">
+            <Button variant="primary" disabled={syncing} onClick={saveToServer}>
+              Save to server
+            </Button>
+            <Button disabled={syncing} onClick={loadFromServer}>
+              Load from server
+            </Button>
+          </div>
+        ) : (
+          <Banner kind="info">
+            Start the backend (<span className="font-mono">docker compose up -d</span>) to enable
+            server-side storage and Claude-powered PDF import. The app works fully without it.
+          </Banner>
+        )}
       </Card>
     </div>
   )

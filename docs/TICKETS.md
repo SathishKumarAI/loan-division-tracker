@@ -53,6 +53,8 @@ Status keys: `OPEN` · `IN PROGRESS` · `DONE` · `WON'T DO`
 ### T-014 — Backend + AI PDF validation + server-side storage
 - 2026-06-18 OPENED — add a FastAPI backend that (a) persists datasets + AI "findings" to SQLite on a Docker volume, (b) sends bank PDFs to Claude (CLI subscription by default, Anthropic API as a switch) to extract + validate the rate timeline & conventions, feeding the parse-then-confirm UI. Design + options written to `docs/AI-AND-BACKEND.md`.
 - 2026-06-18 BLOCKED — awaiting user decision on AI mode (Claude CLI vs Anthropic API) and storage (backend SQLite vs keep local-only). Compose already scaffolds the `backend` service + volume + `AI_MODE`.
+- 2026-06-18 DECIDED — Claude CLI (subscription) · backend SQLite (volume) · PDF sent as text + page images.
+- 2026-06-18 DONE — FastAPI backend (`backend/`): SQLite datasets + findings on a volume; `/api/pdf/analyze` extracts text (PyMuPDF) + renders page PNGs and sends both to Claude via the CLI for a structured, *reasoned* rate timeline + conventions + validation, persisted as a finding. Frontend: `src/lib/api.ts` client; Import tab uses AI with graceful local-regex fallback and shows Claude's summary/validation/conventions (applied on accept); Reports gains Save/Load to server. Compose runs web+backend; `.env.example` added. Verified end-to-end in the container: uploaded sample PDF → Claude returned 3-row timeline + flagged missing interest-type/day-count/principal/prepayment terms; dataset saved to and reloaded from the backend.
 
 ## Backlog (OPEN — not yet started)
 - 2026-06-18 OPEN — T-008: Optional cloud sync / multi-device (needs a backend; currently local-only by design).
