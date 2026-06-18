@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useUiStore } from '../store/useUiStore'
 import { useLoanResult } from '../lib/useLoanResult'
 import { Card, Button, Select, Field } from '../components/ui'
 import { KpiCard } from '../components/KpiCard'
@@ -9,6 +10,7 @@ import type { Schedule as ScheduleT } from '../engine'
 
 export function Schedule() {
   const result = useLoanResult()
+  const toast = useUiStore((s) => s.toast)
   const [selected, setSelected] = useState<string>('consolidated')
 
   const schedule: ScheduleT =
@@ -39,8 +41,8 @@ export function Schedule() {
               ))}
             </Select>
           </Field>
-          <Button onClick={() => exportScheduleCSV(schedule, fileName)}>CSV</Button>
-          <Button onClick={() => exportScheduleXLSX(schedule, fileName)}>Excel</Button>
+          <Button onClick={() => { exportScheduleCSV(schedule, fileName); toast('CSV exported') }}>CSV</Button>
+          <Button onClick={() => { exportScheduleXLSX(schedule, fileName); toast('Excel exported') }}>Excel</Button>
         </div>
       </div>
 

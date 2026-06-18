@@ -1,5 +1,7 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef } from 'react'
 import { useLoanStore } from './store/useLoanStore'
+import { useUiStore } from './store/useUiStore'
+import type { Tab } from './store/useUiStore'
 import { useAuditRecorder } from './lib/useAuditRecorder'
 import { Dashboard } from './pages/Dashboard'
 import { People } from './pages/People'
@@ -10,17 +12,8 @@ import { Reports } from './pages/Reports'
 import { Import } from './pages/Import'
 import { Scenarios } from './pages/Scenarios'
 import { History } from './pages/History'
-
-type Tab =
-  | 'dashboard'
-  | 'people'
-  | 'setup'
-  | 'schedule'
-  | 'payments'
-  | 'scenarios'
-  | 'import'
-  | 'reports'
-  | 'history'
+import { Toasts } from './components/Toasts'
+import { CommandPalette } from './components/CommandPalette'
 
 const TABS: { id: Tab; label: string }[] = [
   { id: 'dashboard', label: 'Dashboard' },
@@ -35,17 +28,33 @@ const TABS: { id: Tab; label: string }[] = [
 ]
 
 export default function App() {
-  const [tab, setTab] = useState<Tab>('dashboard')
+  const tab = useUiStore((s) => s.tab)
+  const setTab = useUiStore((s) => s.setTab)
+  const setPaletteOpen = useUiStore((s) => s.setPaletteOpen)
   const theme = useLoanStore((s) => s.theme)
   const toggleTheme = useLoanStore((s) => s.toggleTheme)
+  const mainRef = useRef<HTMLElement>(null)
   useAuditRecorder()
 
   useEffect(() => {
     document.documentElement.classList.toggle('dark', theme === 'dark')
   }, [theme])
 
+  // Focus management: on tab change, move focus to the main region so keyboard
+  // and screen-reader users land on the new content (WCAG 2.4.3).
+  useEffect(() => {
+    mainRef.current?.focus()
+  }, [tab])
+
   return (
     <div className="min-h-full">
+      <a
+        href="#main"
+        className="sr-only focus:not-sr-only focus:absolute focus:left-3 focus:top-3 focus:z-50 focus:rounded-lg focus:bg-primary focus:px-3 focus:py-2 focus:text-sm focus:text-oncolor"
+      >
+        Skip to main content
+      </a>
+
       <header className="sticky top-0 z-20 border-b border-surface0 bg-card/80 backdrop-blur">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3">
           <div className="flex items-center gap-2">
@@ -55,15 +64,25 @@ export default function App() {
               <p className="text-xs text-subtext0">Variable-rate EMI, divided &amp; auditable</p>
             </div>
           </div>
-          <button
-            onClick={toggleTheme}
-            className="rounded-lg border border-surface1 px-2.5 py-1.5 text-sm text-subtext0 hover:bg-surface0/40"
-            aria-label="Toggle theme"
-          >
-            {theme === 'light' ? '🌙' : '☀️'}
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setPaletteOpen(true)}
+              className="hidden items-center gap-1.5 rounded-lg border border-surface1 px-2.5 py-1.5 text-xs text-subtext0 hover:bg-surface0/40 sm:flex"
+              aria-label="Open command palette"
+            >
+              <span>Search</span>
+              <kbd className="rounded bg-surface0 px-1.5 py-0.5 font-mono text-[10px] text-subtext0">⌘K</kbd>
+            </button>
+            <button
+              onClick={toggleTheme}
+              className="rounded-lg border border-surface1 px-2.5 py-1.5 text-sm text-subtext0 hover:bg-surface0/40"
+              aria-label={`Switch to ${theme === 'light' ? 'dark' : 'light'} theme`}
+            >
+              {theme === 'light' ? '🌙' : '☀️'}
+            </button>
+          </div>
         </div>
-        <nav className="mx-auto max-w-7xl overflow-x-auto px-2">
+        <nav className="mx-auto max-w-7xl overflow-x-auto px-2" aria-label="Primary">
           <div className="flex gap-1 pb-px">
             {TABS.map((t) => (
               <button
@@ -83,7 +102,12 @@ export default function App() {
         </nav>
       </header>
 
-      <main className="mx-auto max-w-7xl px-4 py-6">
+      <main
+        id="main"
+        ref={mainRef}
+        tabIndex={-1}
+        className="mx-auto max-w-7xl px-4 py-6 outline-none"
+      >
         {tab === 'dashboard' && <Dashboard />}
         {tab === 'people' && <People />}
         {tab === 'setup' && <LoanSetup />}
@@ -98,6 +122,9 @@ export default function App() {
       <footer className="mx-auto max-w-7xl px-4 py-6 text-center text-xs text-overlay0">
         All calculations run locally in your browser · decimal-safe · open source
       </footer>
+
+      <Toasts />
+      <CommandPalette />
     </div>
   )
 }

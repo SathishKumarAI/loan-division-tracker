@@ -1,5 +1,29 @@
 # Worklog
 
+## 2026-06-18 11:45 — UI/UX pass: apply the general best-practice checklist
+
+**Summary:** Applied the high-value items from `~/coding/docs/features/UI-UX-FEATURES.md` to the app and documented the mapping in `docs/UI-UX-APPLIED.md`. Verified in-browser (command palette, toast+undo, inline validation) and confirmed the Chrome autofill console notice is gone. 41 tests still green.
+
+**Changes:**
+- `src/store/useUiStore.ts` — ephemeral UI store: tab nav, command-palette state, toast queue
+- `src/components/Toasts.tsx` — `aria-live` toast viewport (success/error/info, actionable Undo)
+- `src/components/CommandPalette.tsx` — ⌘K/Ctrl-K fuzzy nav + quick actions, focus-trapped, keyboard-driven
+- `src/components/ui.tsx` — `Field` now associates `<label htmlFor>` with an auto-id via context; `Input`/`Select` get real `id`/`name`, `aria-invalid`, `aria-describedby`; inline `error=` support
+- `src/App.tsx` — skip-link, landmark labels, focus-to-main on tab change, "Search ⌘K" affordance, mounts Toasts + CommandPalette; nav state moved to the UI store
+- `src/index.css` — `prefers-reduced-motion` guard; `useLoanStore.ts` — initial theme from `prefers-color-scheme`
+- Pages wired to toasts (Payments/Import/Reports/Schedule), undo-on-delete + validation (People/LoanSetup), `restoreBorrower` added
+- `docs/UI-UX-APPLIED.md` — checklist→implementation mapping with file refs; README links it
+
+**Decisions:**
+- Forgiveness over confirmation: soft-delete + Undo toast for removing a person, rather than a blocking modal.
+- Nav state lifted into a tiny non-persisted UI store so the command palette can route without prop-drilling.
+- Replaced `alert()` on bad import with a non-blocking error toast + JSON shape check.
+
+**Follow-ups (unchanged):**
+- [ ] Card-per-row schedule on phones (currently bounded horizontal scroll)
+- [ ] Code-split export/PDF libs to trim the ~1.4MB main chunk
+- [ ] Wire recorded payments into the as-of rollups
+
 ## 2026-06-18 11:36 — Stage 3: import, scenarios, audit, milestones
 
 **Summary:** Completed Stage 3. Added browser PDF ingestion, what-if scenarios with a rate-shock slider, an audit trail, and milestone markers. Verified the whole flow in a real browser (uploaded a generated bank PDF → parsed → accepted → audit entry) and pushed. 41 tests green.

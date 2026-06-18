@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useLoanStore } from '../store/useLoanStore'
+import { useUiStore } from '../store/useUiStore'
 import { useLoanResult } from '../lib/useLoanResult'
 import { Card, Button, Input, Select, Field, Banner, Tag, EmptyState } from '../components/ui'
 import { KpiCard } from '../components/KpiCard'
@@ -9,6 +10,7 @@ import { formatDate } from '../lib/format'
 
 export function Payments() {
   const { loan, borrowers, payments, addPayment, removePayment } = useLoanStore()
+  const toast = useUiStore((s) => s.toast)
   const result = useLoanResult()
 
   const [form, setForm] = useState({
@@ -85,7 +87,7 @@ export function Payments() {
             <Button
               variant="primary"
               disabled={!form.borrowerId || form.amount <= 0}
-              onClick={() =>
+              onClick={() => {
                 addPayment({
                   borrowerId: form.borrowerId,
                   date: form.date,
@@ -93,7 +95,8 @@ export function Payments() {
                   kind: form.kind,
                   applyAs: form.applyAs,
                 })
-              }
+                toast(`Recorded ${formatINR(form.amount)} ${form.kind} payment`)
+              }}
             >
               Record payment
             </Button>

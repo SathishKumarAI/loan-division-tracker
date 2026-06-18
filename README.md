@@ -47,6 +47,10 @@ src/
   lib/        export, formatting, PDF parsing helpers
 ```
 
+## UI/UX & accessibility
+
+⌘K command palette, toast feedback with undo-on-delete, inline form validation, skip-link + focus management, OS light/dark + `prefers-reduced-motion`, and WCAG-minded labels/landmarks throughout. The full mapping against the general UI/UX checklist is in [`docs/UI-UX-APPLIED.md`](docs/UI-UX-APPLIED.md).
+
 ## Where the formulas live
 
 [`src/engine/README.md`](src/engine/README.md) documents the EMI formula, the keep-EMI tenure solve, the residual last installment, the reset strategies, and how to validate the engine against a real bank schedule.

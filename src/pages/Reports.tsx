@@ -1,6 +1,7 @@
 import { useRef } from 'react'
 import { useLoanStore } from '../store/useLoanStore'
 import type { PersistedState } from '../store/useLoanStore'
+import { useUiStore } from '../store/useUiStore'
 import { useLoanResult } from '../lib/useLoanResult'
 import { Card, Button, Banner } from '../components/ui'
 import { formatINR, activeAnnualRate } from '../engine'
@@ -11,6 +12,7 @@ import { formatDate } from '../lib/format'
 export function Reports() {
   const store = useLoanStore()
   const { loan, borrowers, payments, asOf, importData, resetToSeed } = store
+  const toast = useUiStore((s) => s.toast)
   const result = useLoanResult()
   const fileInput = useRef<HTMLInputElement>(null)
 
@@ -36,9 +38,11 @@ export function Reports() {
     reader.onload = () => {
       try {
         const data = JSON.parse(String(reader.result)) as PersistedState
+        if (!data.loan || !Array.isArray(data.borrowers)) throw new Error('shape')
         importData(data)
+        toast('Backup imported')
       } catch {
-        alert('Invalid JSON backup file.')
+        toast('Invalid JSON backup file', 'error')
       }
     }
     reader.readAsText(file)
@@ -68,7 +72,7 @@ export function Reports() {
                 </div>
                 <div className="flex gap-2">
                   <Button
-                    onClick={() =>
+                    onClick={() => {
                       exportStatementPDF({
                         borrowerName: b.name,
                         principal: allocatedPrincipal,
@@ -80,11 +84,12 @@ export function Reports() {
                         currentApr: snap.apr,
                         asOf,
                       })
-                    }
+                      toast(`Statement PDF for ${b.name} downloaded`)
+                    }}
                   >
                     Statement PDF
                   </Button>
-                  <Button onClick={() => exportICS({ borrowerName: b.name, rows: schedule.rows, fromDate: asOf })}>
+                  <Button onClick={() => { exportICS({ borrowerName: b.name, rows: schedule.rows, fromDate: asOf }); toast(`Calendar reminders for ${b.name} downloaded`) }}>
                     .ics reminders
                   </Button>
                 </div>
@@ -98,7 +103,10 @@ export function Reports() {
         <div className="flex flex-wrap gap-2">
           <Button
             variant="primary"
-            onClick={() => exportJSON({ loan, borrowers, payments, asOf, theme: store.theme }, 'loan-division-backup')}
+            onClick={() => {
+              exportJSON({ loan, borrowers, payments, asOf, theme: store.theme }, 'loan-division-backup')
+              toast('Backup exported')
+            }}
           >
             Export JSON
           </Button>
@@ -110,7 +118,15 @@ export function Reports() {
             className="hidden"
             onChange={(e) => e.target.files?.[0] && onImport(e.target.files[0])}
           />
-          <Button variant="danger" onClick={() => confirm('Reset all data to the seed example?') && resetToSeed()}>
+          <Button
+            variant="danger"
+            onClick={() => {
+              if (confirm('Reset all data to the seed example?')) {
+                resetToSeed()
+                toast('Reset to sample data', 'info')
+              }
+            }}
+          >
             Reset to sample
           </Button>
         </div>

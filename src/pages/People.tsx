@@ -1,15 +1,30 @@
 import { useState } from 'react'
 import { useLoanStore } from '../store/useLoanStore'
+import { useUiStore } from '../store/useUiStore'
 import { useLoanResult } from '../lib/useLoanResult'
 import { Card, Button, Input, Field, Banner, Tag, EmptyState } from '../components/ui'
 import { formatINR } from '../engine'
 import { formatPct } from '../lib/format'
 
 export function People() {
-  const { loan, borrowers, addBorrower, updateBorrower, removeBorrower, setAllocationMode } =
+  const { loan, borrowers, addBorrower, updateBorrower, removeBorrower, restoreBorrower, setAllocationMode } =
     useLoanStore()
+  const toast = useUiStore((s) => s.toast)
   const result = useLoanResult()
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null)
+
+  const deletePerson = (id: string) => {
+    const index = borrowers.findIndex((b) => b.id === id)
+    const person = borrowers[index]
+    removeBorrower(id)
+    setConfirmDelete(null)
+    if (person) {
+      toast(`Removed ${person.name}`, 'info', {
+        label: 'Undo',
+        run: () => restoreBorrower(person, index),
+      })
+    }
+  }
 
   const allocUnit =
     loan.allocationMode === 'amount' ? '₹' : loan.allocationMode === 'percent' ? '%' : 'shares'
@@ -86,8 +101,8 @@ export function People() {
                   </div>
                   {confirmDelete === b.id ? (
                     <div className="flex flex-col gap-1">
-                      <Button variant="danger" onClick={() => { removeBorrower(b.id); setConfirmDelete(null) }}>
-                        Confirm
+                      <Button variant="danger" onClick={() => deletePerson(b.id)}>
+                        Remove {b.name}
                       </Button>
                       <Button variant="ghost" onClick={() => setConfirmDelete(null)}>Cancel</Button>
                     </div>
@@ -97,11 +112,15 @@ export function People() {
                 </div>
 
                 <div className="grid grid-cols-2 gap-3 p-4">
-                  <Field label={`Allocation (${allocUnit})`}>
+                  <Field
+                    label={`Allocation (${allocUnit})`}
+                    error={b.allocation < 0 ? 'Cannot be negative' : undefined}
+                  >
                     <Input
                       type="number"
                       value={b.allocation}
                       min={0}
+                      inputMode="decimal"
                       onChange={(e) => updateBorrower(b.id, { allocation: Number(e.target.value) })}
                     />
                   </Field>

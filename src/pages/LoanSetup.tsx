@@ -24,11 +24,16 @@ export function LoanSetup() {
 
       <Card title="Master loan" subtitle="Principal, dates, tenure and frequency">
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          <Field label="Principal (₹)" hint={formatINR(loan.principal)}>
+          <Field
+            label="Principal (₹)"
+            hint={formatINR(loan.principal)}
+            error={loan.principal <= 0 ? 'Principal must be greater than zero' : undefined}
+          >
             <Input
               type="number"
               value={loan.principal}
               min={0}
+              inputMode="decimal"
               onChange={(e) => setLoanField('principal', Number(e.target.value))}
             />
           </Field>
@@ -107,6 +112,7 @@ export function LoanSetup() {
               <Input
                 className="col-span-3"
                 type="date"
+                aria-label="Effective date"
                 value={rc.effectiveDate}
                 onChange={(e) => updateRateChange(rc.id, { effectiveDate: e.target.value })}
               />
@@ -114,11 +120,14 @@ export function LoanSetup() {
                 className="col-span-2"
                 type="number"
                 step="0.05"
+                inputMode="decimal"
+                aria-label="Annual rate percent"
                 value={rc.annualRatePct}
                 onChange={(e) => updateRateChange(rc.id, { annualRatePct: Number(e.target.value) })}
               />
               <Input
                 className="col-span-6"
+                aria-label="Rate change note"
                 value={rc.note ?? ''}
                 placeholder="e.g. Repo hike +25bps"
                 onChange={(e) => updateRateChange(rc.id, { note: e.target.value })}

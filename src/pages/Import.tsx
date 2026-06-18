@@ -1,11 +1,14 @@
 import { useRef, useState } from 'react'
 import { useLoanStore } from '../store/useLoanStore'
+import { useUiStore } from '../store/useUiStore'
 import { Card, Button, Input, Banner, EmptyState } from '../components/ui'
 import { parseBankPdf } from '../lib/pdfParse'
 import type { ParsedRateRow } from '../lib/pdfParse'
 
 export function Import() {
   const replaceRateTimeline = useLoanStore((s) => s.replaceRateTimeline)
+  const toast = useUiStore((s) => s.toast)
+  const setTab = useUiStore((s) => s.setTab)
   const fileRef = useRef<HTMLInputElement>(null)
 
   const [status, setStatus] = useState<'idle' | 'parsing' | 'done' | 'error'>('idle')
@@ -49,6 +52,10 @@ export function Import() {
     setStatus('idle')
     setRows([])
     setRawText('')
+    toast(`Applied ${valid.length} rate ${valid.length === 1 ? 'row' : 'rows'} to the loan`, 'success', {
+      label: 'View setup',
+      run: () => setTab('setup'),
+    })
   }
 
   return (

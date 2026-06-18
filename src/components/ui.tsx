@@ -1,10 +1,23 @@
 /** Small, accessible, Tailwind-styled UI primitives. */
+import { createContext, useContext, useId } from 'react'
 import type {
   ReactNode,
   InputHTMLAttributes,
   SelectHTMLAttributes,
   ButtonHTMLAttributes,
 } from 'react'
+
+/**
+ * Links a Field's <label> to its control: the Field generates a stable id and
+ * shares it (plus error state) so Input/Select get a real `id`/`name` and
+ * `aria-describedby`/`aria-invalid` without per-call wiring (WCAG 3.3.1/3.3.2).
+ */
+interface FieldCtx {
+  id?: string
+  errorId?: string
+  invalid?: boolean
+}
+const FieldContext = createContext<FieldCtx>({})
 
 export function Card({
   children,
@@ -63,32 +76,70 @@ export function Button({
 export function Field({
   label,
   hint,
+  error,
   children,
   className = '',
 }: {
   label: ReactNode
   hint?: ReactNode
+  /** Inline validation message; sets aria-invalid on the control. */
+  error?: ReactNode
   children: ReactNode
   className?: string
 }) {
+  const id = useId()
+  const errorId = `${id}-err`
   return (
-    <label className={`block ${className}`}>
-      <span className="mb-1 block text-sm font-medium text-subtext0">{label}</span>
-      {children}
-      {hint && <span className="mt-1 block text-xs text-overlay0">{hint}</span>}
-    </label>
+    <div className={`block ${className}`}>
+      <label htmlFor={id} className="mb-1 block text-sm font-medium text-subtext0">
+        {label}
+      </label>
+      <FieldContext.Provider value={{ id, errorId, invalid: !!error }}>
+        {children}
+      </FieldContext.Provider>
+      {error ? (
+        <span id={errorId} className="mt-1 block text-xs text-negative">
+          {error}
+        </span>
+      ) : (
+        hint && <span className="mt-1 block text-xs text-overlay0">{hint}</span>
+      )}
+    </div>
   )
 }
 
 const inputBase =
-  'w-full rounded-lg border border-surface1 bg-base px-3 py-2 text-sm text-text outline-none focus:border-primary tnum'
+  'w-full rounded-lg border bg-base px-3 py-2 text-sm text-text outline-none tnum'
+const okBorder = 'border-surface1 focus:border-primary'
+const badBorder = 'border-negative focus:border-negative'
 
 export function Input(props: InputHTMLAttributes<HTMLInputElement>) {
-  return <input {...props} className={`${inputBase} ${props.className ?? ''}`} />
+  const ctx = useContext(FieldContext)
+  const { className, id, name, ...rest } = props
+  return (
+    <input
+      id={id ?? ctx.id}
+      name={name ?? (props['aria-label'] as string) ?? ctx.id}
+      aria-invalid={ctx.invalid || undefined}
+      aria-describedby={ctx.invalid ? ctx.errorId : undefined}
+      {...rest}
+      className={`${inputBase} ${ctx.invalid ? badBorder : okBorder} ${className ?? ''}`}
+    />
+  )
 }
 
 export function Select(props: SelectHTMLAttributes<HTMLSelectElement>) {
-  return <select {...props} className={`${inputBase} ${props.className ?? ''}`} />
+  const ctx = useContext(FieldContext)
+  const { className, id, name, ...rest } = props
+  return (
+    <select
+      id={id ?? ctx.id}
+      name={name ?? ctx.id}
+      aria-invalid={ctx.invalid || undefined}
+      {...rest}
+      className={`${inputBase} ${ctx.invalid ? badBorder : okBorder} ${className ?? ''}`}
+    />
+  )
 }
 
 export function Tag({

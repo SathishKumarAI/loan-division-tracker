@@ -70,6 +70,8 @@ export interface LoanStore extends PersistedState {
   addBorrower: (b?: Partial<Borrower>) => void
   updateBorrower: (id: string, patch: Partial<Borrower>) => void
   removeBorrower: (id: string) => void
+  /** Re-insert a previously removed borrower (undo support). */
+  restoreBorrower: (b: Borrower, index: number) => void
   // payments
   addPayment: (p: Omit<Payment, 'id'>) => void
   updatePayment: (id: string, patch: Partial<Payment>) => void
@@ -81,12 +83,17 @@ export interface LoanStore extends PersistedState {
   resetToSeed: () => void
 }
 
+// Honor the OS colour-scheme on first ever load (before any stored preference).
+const prefersDark =
+  typeof window !== 'undefined' &&
+  window.matchMedia?.('(prefers-color-scheme: dark)').matches
+
 const initial: PersistedState = {
   loan: seedLoan,
   borrowers: seedBorrowers,
   payments: [],
   asOf: '2026-06-18',
-  theme: 'light',
+  theme: prefersDark ? 'dark' : 'light',
 }
 
 export const useLoanStore = create<LoanStore>()(
@@ -154,6 +161,12 @@ export const useLoanStore = create<LoanStore>()(
           borrowers: s.borrowers.filter((b) => b.id !== id),
           payments: s.payments.filter((p) => p.borrowerId !== id),
         })),
+      restoreBorrower: (b, index) =>
+        set((s) => {
+          const next = [...s.borrowers]
+          next.splice(Math.min(index, next.length), 0, b)
+          return { borrowers: next }
+        }),
 
       addPayment: (p) => set((s) => ({ payments: [...s.payments, { ...p, id: uid('p') }] })),
       updatePayment: (id, patch) =>
