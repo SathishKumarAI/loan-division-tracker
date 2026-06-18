@@ -8,5 +8,9 @@ export function useLoanResult(): LoanResult {
   const loan = useLoanStore((s) => s.loan)
   const borrowers = useLoanStore((s) => s.borrowers)
   const asOf = useLoanStore((s) => s.asOf)
-  return useMemo(() => computeLoan(loan, borrowers, asOf), [loan, borrowers, asOf])
+  const payments = useLoanStore((s) => s.payments)
+  return useMemo(
+    () => computeLoan(loan, borrowers, asOf, payments),
+    [loan, borrowers, asOf, payments],
+  )
 }

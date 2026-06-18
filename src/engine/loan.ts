@@ -8,11 +8,13 @@
 import { D, money, sumMoney, monthlyRate } from './money'
 import { cmpISO } from './dates'
 import { amortize, activeAnnualRate } from './amortize'
+import type { Prepayment } from './amortize'
 import { amortizeFlat } from './flat'
 import { allocate, reconcileAllocation } from './allocation'
 import type {
   MasterLoan,
   Borrower,
+  Payment,
   Schedule,
   ScheduleRow,
   RowTrace,
@@ -20,16 +22,35 @@ import type {
   LoanResult,
 } from './types'
 
-/** Compute one person's schedule from their allocated principal. */
+/**
+ * Recorded payments that reduce principal beyond the scheduled EMI become
+ * prepayment events folded into the amortization. A foreclosure clears the
+ * balance (its amount is capped to the outstanding inside the engine). Regular
+ * and missed payments don't alter the reducing-balance schedule and are skipped.
+ */
+function toPrepayments(payments: Payment[], defaultStrategy: 'TENURE' | 'EMI'): Prepayment[] {
+  return payments
+    .filter((p) => p.kind === 'prepayment' || p.kind === 'partial' || p.kind === 'foreclosure')
+    .map((p) => ({
+      date: p.date,
+      amount: p.kind === 'foreclosure' ? Number.MAX_SAFE_INTEGER : p.amount,
+      applyAs: p.applyAs === 'EMI' ? 'EMI' : defaultStrategy,
+    }))
+}
+
+/** Compute one person's schedule from their allocated principal and payments. */
 export function computeBorrowerSchedule(
   loan: MasterLoan,
   borrower: Borrower,
   allocatedPrincipal: number,
+  payments: Payment[] = [],
 ): Schedule {
   const startDate = borrower.startDate ?? loan.startDate
   const tenureMonths = borrower.tenureMonthsOverride ?? loan.tenureMonths
 
   if (loan.interestType === 'flat') {
+    // Flat interest is charged on the original principal, so prepayments can't be
+    // folded in the reducing-balance way; flat schedules ignore them.
     return amortizeFlat({
       principal: allocatedPrincipal,
       startDate,
@@ -37,6 +58,8 @@ export function computeBorrowerSchedule(
       rateTimeline: loan.rateTimeline,
     })
   }
+
+  const defaultStrategy = loan.resetStrategy === 'EMI' ? 'EMI' : 'TENURE'
   return amortize({
     principal: allocatedPrincipal,
     startDate,
@@ -45,6 +68,7 @@ export function computeBorrowerSchedule(
     resetStrategy: loan.resetStrategy,
     maxTenureMonths: loan.maxTenureMonths,
     dayCount: loan.dayCount,
+    prepayments: toPrepayments(payments, defaultStrategy),
   })
 }
 
@@ -135,17 +159,24 @@ export function computeLoan(
   loan: MasterLoan,
   borrowers: Borrower[],
   asOf: string,
+  payments: Payment[] = [],
 ): LoanResult {
   const allocations = allocate(borrowers, loan.principal, loan.allocationMode)
   const allocReport = reconcileAllocation(allocations, loan.principal)
   const allocMap = new Map(allocations.map((a) => [a.borrowerId, a.amount]))
+  const paymentsByBorrower = new Map<string, Payment[]>()
+  for (const p of payments) {
+    const arr = paymentsByBorrower.get(p.borrowerId) ?? []
+    arr.push(p)
+    paymentsByBorrower.set(p.borrowerId, arr)
+  }
 
   const results: BorrowerResult[] = borrowers.map((b) => {
     const allocatedPrincipal = allocMap.get(b.id) ?? 0
     return {
       borrower: b,
       allocatedPrincipal,
-      schedule: computeBorrowerSchedule(loan, b, allocatedPrincipal),
+      schedule: computeBorrowerSchedule(loan, b, allocatedPrincipal, paymentsByBorrower.get(b.id) ?? []),
     }
   })
 

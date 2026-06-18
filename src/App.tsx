@@ -1,19 +1,23 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, lazy, Suspense } from 'react'
 import { useLoanStore } from './store/useLoanStore'
 import { useUiStore } from './store/useUiStore'
 import type { Tab } from './store/useUiStore'
 import { useAuditRecorder } from './lib/useAuditRecorder'
-import { Dashboard } from './pages/Dashboard'
-import { People } from './pages/People'
-import { LoanSetup } from './pages/LoanSetup'
-import { Schedule } from './pages/Schedule'
-import { Payments } from './pages/Payments'
-import { Reports } from './pages/Reports'
-import { Import } from './pages/Import'
-import { Scenarios } from './pages/Scenarios'
-import { History } from './pages/History'
 import { Toasts } from './components/Toasts'
 import { CommandPalette } from './components/CommandPalette'
+
+// Route pages are lazy-loaded so their heavy dependencies (Recharts on the
+// chart pages, pdf.js on Import) split into separate chunks and only download
+// when that page is opened.
+const Dashboard = lazy(() => import('./pages/Dashboard').then((m) => ({ default: m.Dashboard })))
+const People = lazy(() => import('./pages/People').then((m) => ({ default: m.People })))
+const LoanSetup = lazy(() => import('./pages/LoanSetup').then((m) => ({ default: m.LoanSetup })))
+const Schedule = lazy(() => import('./pages/Schedule').then((m) => ({ default: m.Schedule })))
+const Payments = lazy(() => import('./pages/Payments').then((m) => ({ default: m.Payments })))
+const Reports = lazy(() => import('./pages/Reports').then((m) => ({ default: m.Reports })))
+const Import = lazy(() => import('./pages/Import').then((m) => ({ default: m.Import })))
+const Scenarios = lazy(() => import('./pages/Scenarios').then((m) => ({ default: m.Scenarios })))
+const History = lazy(() => import('./pages/History').then((m) => ({ default: m.History })))
 
 const TABS: { id: Tab; label: string }[] = [
   { id: 'dashboard', label: 'Dashboard' },
@@ -108,15 +112,17 @@ export default function App() {
         tabIndex={-1}
         className="mx-auto max-w-7xl px-4 py-6 outline-none"
       >
-        {tab === 'dashboard' && <Dashboard />}
-        {tab === 'people' && <People />}
-        {tab === 'setup' && <LoanSetup />}
-        {tab === 'schedule' && <Schedule />}
-        {tab === 'payments' && <Payments />}
-        {tab === 'scenarios' && <Scenarios />}
-        {tab === 'import' && <Import />}
-        {tab === 'reports' && <Reports />}
-        {tab === 'history' && <History />}
+        <Suspense fallback={<PageSkeleton />}>
+          {tab === 'dashboard' && <Dashboard />}
+          {tab === 'people' && <People />}
+          {tab === 'setup' && <LoanSetup />}
+          {tab === 'schedule' && <Schedule />}
+          {tab === 'payments' && <Payments />}
+          {tab === 'scenarios' && <Scenarios />}
+          {tab === 'import' && <Import />}
+          {tab === 'reports' && <Reports />}
+          {tab === 'history' && <History />}
+        </Suspense>
       </main>
 
       <footer className="mx-auto max-w-7xl px-4 py-6 text-center text-xs text-overlay0">
@@ -125,6 +131,21 @@ export default function App() {
 
       <Toasts />
       <CommandPalette />
+    </div>
+  )
+}
+
+/** Skeleton shown while a lazy page chunk loads — mirrors the cards-then-content layout. */
+function PageSkeleton() {
+  return (
+    <div className="animate-pulse space-y-4" aria-hidden>
+      <div className="h-7 w-48 rounded bg-surface0" />
+      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+        {Array.from({ length: 4 }).map((_, i) => (
+          <div key={i} className="h-24 rounded-xl bg-surface0" />
+        ))}
+      </div>
+      <div className="h-64 rounded-xl bg-surface0" />
     </div>
   )
 }

@@ -49,7 +49,9 @@ src/
 
 ## UI/UX & accessibility
 
-⌘K command palette, toast feedback with undo-on-delete, inline form validation, skip-link + focus management, OS light/dark + `prefers-reduced-motion`, and WCAG-minded labels/landmarks throughout. The full mapping against the general UI/UX checklist is in [`docs/UI-UX-APPLIED.md`](docs/UI-UX-APPLIED.md).
+⌘K command palette, toast feedback with undo-on-delete, inline form validation, skip-link + focus management, OS light/dark + `prefers-reduced-motion`, and WCAG-minded labels/landmarks throughout. The full mapping against the general UI/UX checklist is in [`docs/UI-UX-APPLIED.md`](docs/UI-UX-APPLIED.md). Work items are tracked in the append-only [`docs/TICKETS.md`](docs/TICKETS.md).
+
+Heavy libraries (Recharts, pdf.js, SheetJS, jsPDF) are code-split and lazy-loaded, so the main bundle is ~85 KB gzip and those chunks download only when their page/export is used. Recorded payments (prepayment / partial / foreclosure) fold into each person's amortization and the as-of rollups.
 
 ## Where the formulas live
 

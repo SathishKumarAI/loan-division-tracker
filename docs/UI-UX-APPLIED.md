@@ -72,3 +72,8 @@ items already present from Stages 1–3 are marked ✓.
 - Card-per-row schedule on phones (currently a bounded horizontal scroll) — checklist "avoid horizontal-scroll tables on mobile".
 - Code-split export/PDF libraries to trim the ~1.4 MB main chunk (perceived-performance / lazy-loading).
 - Wire recorded payments into the as-of rollups (currently projection-based).
+
+### Update — 2026-06-18 (all three resolved; see `docs/TICKETS.md`)
+- **Done (T-007)** Card-per-row schedule on phones — `ScheduleTable` now shows cards under `md` with the same expandable worksheet.
+- **Done (T-006)** Code-split — export libs load via dynamic `import()`; route pages lazy-loaded; main bundle ~1.4 MB → ~255 KB (gzip ~449 KB → ~85 KB).
+- **Done (T-005)** Recorded payments now fold into schedules and the as-of rollups (prepayment / partial / foreclosure).

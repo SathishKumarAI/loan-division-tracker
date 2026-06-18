@@ -1,7 +1,8 @@
-/** CSV / Excel / PDF / JSON / .ics exporters — all client-side, no backend. */
-import * as XLSX from 'xlsx'
-import { jsPDF } from 'jspdf'
-import autoTable from 'jspdf-autotable'
+/**
+ * CSV / Excel / PDF / JSON / .ics exporters — all client-side, no backend.
+ * The heavy libraries (SheetJS, jsPDF) are loaded on demand via dynamic import
+ * so they stay out of the main bundle and only download when an export runs.
+ */
 import type { Schedule, ScheduleRow } from '../engine'
 import { formatINR } from '../engine'
 import { formatDate } from './format'
@@ -43,7 +44,8 @@ export function exportScheduleCSV(schedule: Schedule, name: string) {
   trigger(new Blob([lines.join('\n')], { type: 'text/csv' }), `${name}.csv`)
 }
 
-export function exportScheduleXLSX(schedule: Schedule, name: string) {
+export async function exportScheduleXLSX(schedule: Schedule, name: string) {
+  const XLSX = await import('xlsx')
   const data = [COLS, ...schedule.rows.map(rowToArray)]
   const ws = XLSX.utils.aoa_to_sheet(data)
   const wb = XLSX.utils.book_new()
@@ -59,7 +61,7 @@ export function exportJSON(data: unknown, name: string) {
 }
 
 /** RBI-style per-person statement PDF. */
-export function exportStatementPDF(opts: {
+export async function exportStatementPDF(opts: {
   borrowerName: string
   principal: number
   schedule: Schedule
@@ -70,6 +72,11 @@ export function exportStatementPDF(opts: {
   currentApr: number
   asOf: string
 }) {
+  const [{ jsPDF }, autoTableMod] = await Promise.all([
+    import('jspdf'),
+    import('jspdf-autotable'),
+  ])
+  const autoTable = autoTableMod.default
   const doc = new jsPDF()
   doc.setFontSize(16)
   doc.text('Loan Share Statement', 14, 18)

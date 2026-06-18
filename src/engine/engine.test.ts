@@ -230,6 +230,50 @@ describe('Stage 1 acceptance: 3-person split reconciles across 2 rate resets', (
   })
 })
 
+describe('recorded payments wired into the loan result', () => {
+  const loan: MasterLoan = {
+    principal: 1200000,
+    startDate: '2025-01-01',
+    tenureMonths: 120,
+    frequency: 'monthly',
+    interestType: 'reducing',
+    dayCount: 'monthly',
+    allocationMode: 'percent',
+    resetStrategy: 'TENURE',
+    maxTenureMonths: 360,
+    rateTimeline: [{ id: 'r0', effectiveDate: '2024-01-01', annualRatePct: 9 }],
+  }
+  const borrowers: Borrower[] = [
+    { id: 'a', name: 'A', allocation: 60 },
+    { id: 'b', name: 'B', allocation: 40 },
+  ]
+
+  it('a prepayment shortens that person’s schedule and cuts their interest', () => {
+    const base = computeLoan(loan, borrowers, '2035-01-01', [])
+    const withPre = computeLoan(loan, borrowers, '2035-01-01', [
+      { id: 'p1', borrowerId: 'a', date: '2026-01-01', amount: 200000, kind: 'prepayment', applyAs: 'TENURE' },
+    ])
+    const baseA = base.borrowers.find((x) => x.borrower.id === 'a')!.schedule
+    const preA = withPre.borrowers.find((x) => x.borrower.id === 'a')!.schedule
+    expect(preA.actualTenureMonths).toBeLessThan(baseA.actualTenureMonths)
+    expect(preA.totalInterest).toBeLessThan(baseA.totalInterest)
+    // Untouched borrower B is unchanged.
+    const baseB = base.borrowers.find((x) => x.borrower.id === 'b')!.schedule
+    const preB = withPre.borrowers.find((x) => x.borrower.id === 'b')!.schedule
+    expect(preB.totalInterest).toBe(baseB.totalInterest)
+  })
+
+  it('a foreclosure clears the person’s balance early', () => {
+    const r = computeLoan(loan, borrowers, '2035-01-01', [
+      { id: 'p2', borrowerId: 'b', date: '2027-01-01', amount: 0, kind: 'foreclosure' },
+    ])
+    const b = r.borrowers.find((x) => x.borrower.id === 'b')!.schedule
+    expect(b.rows.at(-1)!.closingBalance).toBe(0)
+    // Closes on/around the foreclosure date, well before the 120-month term.
+    expect(b.actualTenureMonths).toBeLessThan(30)
+  })
+})
+
 describe('prepayment simulation', () => {
   it('reduce-tenure saves interest and shortens the loan', () => {
     const r = simulatePrepayment(

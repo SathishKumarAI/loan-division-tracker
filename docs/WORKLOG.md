@@ -1,5 +1,20 @@
 # Worklog
 
+## 2026-06-18 11:57 — Close remaining follow-ups (T-005/006/007) + ticket ledger
+
+**Summary:** Completed the three open follow-ups and started an append-only ticket ledger (`docs/TICKETS.md`). No deploy. 43 tests green; main bundle cut ~5× on gzip.
+
+**Changes:**
+- **T-005 payments→rollups:** `computeLoan`/`computeBorrowerSchedule` accept `payments`; prepayment/partial/foreclosure fold into amortization (foreclosure clears the balance via capped prepayment); `useLoanResult` passes `payments`. +2 engine tests.
+- **T-006 code-split:** `src/lib/export.ts` loads SheetJS/jsPDF via dynamic `import()`; route pages `lazy()` + `Suspense` skeleton in `App.tsx`. Main bundle ~1.4 MB → ~255 KB (gzip ~449 KB → ~85 KB); Recharts/pdf.js/xlsx/jspdf now on-demand chunks; chunk-size warning gone.
+- **T-007 mobile schedule:** `ScheduleTable` renders table on md+ and card-per-row under md, both with the worksheet. Verified at 390px.
+- `docs/TICKETS.md` — append-only ledger (T-001…T-007 done; T-008…T-011 backlog). `docs/UI-UX-APPLIED.md` follow-ups appended with resolution notes (kept originals).
+
+**Decisions:**
+- Foreclosure modeled as a prepayment capped to outstanding (engine already clamps `min(amount, balance)`), so it closes the share cleanly.
+- Flat-interest schedules deliberately ignore prepayments (interest is on original principal) — documented in `computeBorrowerSchedule`.
+- Ticket ledger is append-only by instruction: status changes are new dated lines, never edits/deletes.
+
 ## 2026-06-18 11:45 — UI/UX pass: apply the general best-practice checklist
 
 **Summary:** Applied the high-value items from `~/coding/docs/features/UI-UX-FEATURES.md` to the app and documented the mapping in `docs/UI-UX-APPLIED.md`. Verified in-browser (command palette, toast+undo, inline validation) and confirmed the Chrome autofill console notice is gone. 41 tests still green.
