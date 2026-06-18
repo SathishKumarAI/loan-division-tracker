@@ -1,13 +1,26 @@
 import { useEffect, useState } from 'react'
 import { useLoanStore } from './store/useLoanStore'
+import { useAuditRecorder } from './lib/useAuditRecorder'
 import { Dashboard } from './pages/Dashboard'
 import { People } from './pages/People'
 import { LoanSetup } from './pages/LoanSetup'
 import { Schedule } from './pages/Schedule'
 import { Payments } from './pages/Payments'
 import { Reports } from './pages/Reports'
+import { Import } from './pages/Import'
+import { Scenarios } from './pages/Scenarios'
+import { History } from './pages/History'
 
-type Tab = 'dashboard' | 'people' | 'setup' | 'schedule' | 'payments' | 'reports'
+type Tab =
+  | 'dashboard'
+  | 'people'
+  | 'setup'
+  | 'schedule'
+  | 'payments'
+  | 'scenarios'
+  | 'import'
+  | 'reports'
+  | 'history'
 
 const TABS: { id: Tab; label: string }[] = [
   { id: 'dashboard', label: 'Dashboard' },
@@ -15,13 +28,17 @@ const TABS: { id: Tab; label: string }[] = [
   { id: 'setup', label: 'Loan Setup' },
   { id: 'schedule', label: 'Schedule' },
   { id: 'payments', label: 'Payments' },
+  { id: 'scenarios', label: 'Scenarios' },
+  { id: 'import', label: 'Import PDF' },
   { id: 'reports', label: 'Reports' },
+  { id: 'history', label: 'History' },
 ]
 
 export default function App() {
   const [tab, setTab] = useState<Tab>('dashboard')
   const theme = useLoanStore((s) => s.theme)
   const toggleTheme = useLoanStore((s) => s.toggleTheme)
+  useAuditRecorder()
 
   useEffect(() => {
     document.documentElement.classList.toggle('dark', theme === 'dark')
@@ -72,7 +89,10 @@ export default function App() {
         {tab === 'setup' && <LoanSetup />}
         {tab === 'schedule' && <Schedule />}
         {tab === 'payments' && <Payments />}
+        {tab === 'scenarios' && <Scenarios />}
+        {tab === 'import' && <Import />}
         {tab === 'reports' && <Reports />}
+        {tab === 'history' && <History />}
       </main>
 
       <footer className="mx-auto max-w-7xl px-4 py-6 text-center text-xs text-overlay0">

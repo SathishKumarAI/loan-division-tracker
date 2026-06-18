@@ -8,6 +8,7 @@ import {
   CrossoverChart,
   PerPersonBars,
 } from '../components/charts'
+import { Milestones } from '../components/Milestones'
 import { formatINR } from '../engine'
 import { formatINRCompact, formatPct, formatMonthYear } from '../lib/format'
 
@@ -84,6 +85,8 @@ export function Dashboard() {
           <PerPersonBars data={perPerson} />
         </Card>
       </div>
+
+      <Milestones />
     </div>
   )
 }

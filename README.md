@@ -9,8 +9,8 @@ A browser-based React app that manages **one bank loan divided among several peo
 | Stage | Scope | State |
 |-------|-------|-------|
 | **1 — Core engine** | Decimal-safe reducing-balance EMI, per-person + consolidated schedules, variable-rate resets (tenure / EMI / combination), last-EMI residual, negative-amortization guard, reconciliation invariant | ✅ done, 29 tests green |
-| **2 — Transparency & UX** | Accountant's-worksheet schedule, KPI cards, charts (balance, principal-vs-interest, crossover), payments + prepayment, CSV/PDF export, RBI-style statement | 🚧 in progress |
-| **3 — Import & polish** | Browser PDF ingestion (parse-then-confirm), what-if scenarios, rate-shock slider, audit trail, .ics reminders | ⏳ planned |
+| **2 — Transparency & UX** | Accountant's-worksheet schedule, KPI cards, charts (balance, principal-vs-interest, crossover), payments + prepayment, CSV/PDF export, RBI-style statement | ✅ done |
+| **3 — Import & polish** | Browser PDF ingestion (parse-then-confirm + manual fallback), what-if scenarios + rate-shock slider, audit trail/version history, milestone notifications, .ics reminders | ✅ done, 41 tests green |
 
 ## Configured conventions (this build)
 
@@ -42,7 +42,8 @@ src/
   engine/     pure calculation core (see engine/README.md)
   store/      Zustand state + localStorage persistence
   components/ reusable UI (KPI cards, schedule table, charts, worksheet)
-  pages/      Dashboard, People, Loan Setup, Schedule, Payments, Reports
+  pages/      Dashboard, People, Loan Setup, Schedule, Payments,
+              Scenarios, Import (PDF), Reports, History (audit trail)
   lib/        export, formatting, PDF parsing helpers
 ```
 

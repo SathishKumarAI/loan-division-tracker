@@ -137,7 +137,7 @@ export function LoanSetup() {
         {loan.rateTimeline.length > 0 && (
           <p className="mt-3 text-xs text-overlay0">
             Starting rate {loan.rateTimeline[0].annualRatePct}% from {formatDate(loan.rateTimeline[0].effectiveDate)}.
-            PDF import (parse-then-confirm) lands here in Stage 3.
+            Prefer to import? Use the “Import PDF” tab to parse a bank statement into this timeline.
           </p>
         )}
       </Card>
