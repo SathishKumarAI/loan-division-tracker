@@ -1,5 +1,27 @@
 # Worklog
 
+## 2026-06-18 11:36 — Stage 3: import, scenarios, audit, milestones
+
+**Summary:** Completed Stage 3. Added browser PDF ingestion, what-if scenarios with a rate-shock slider, an audit trail, and milestone markers. Verified the whole flow in a real browser (uploaded a generated bank PDF → parsed → accepted → audit entry) and pushed. 41 tests green.
+
+**Changes:**
+- `src/lib/pdfParseCore.ts` + `pdfParse.ts` — pure date/rate parsers (DOM-free, unit-tested) split from the pdf.js extraction layer (coordinate-grouped line reconstruction)
+- `src/pages/Import.tsx` — parse-then-confirm editable rate table + raw-text manual fallback
+- `src/lib/scenarios.ts` + `src/pages/Scenarios.tsx` — rate-shock slider, Extend-tenure vs Raise-EMI comparison with deltas
+- `src/store/useAuditStore.ts` + `src/lib/useAuditRecorder.ts` + `src/pages/History.tsx` — persisted audit log via store subscription/diff
+- `src/lib/milestones.ts` + `src/components/Milestones.tsx` — progress markers + browser Notification, on the dashboard
+- `src/lib/pdfParse.test.ts` — 12 new tests; App nav extended; README/LoanSetup updated
+
+**Decisions:**
+- Split pure parsers from pdf.js so they're testable in Node (pdfjs pulls in DOMMatrix/canvas which jsdom lacks).
+- Rate shock applies to the whole timeline (models a shifted rate environment), not just future entries — otherwise it's a no-op on past-dated seeds.
+- Audit kept in a separate persisted store + subscribe diff rather than wiring logging into every action.
+
+**Follow-ups:**
+- [ ] Code-split export/pdf libs to trim the 1.4MB main chunk
+- [ ] Add `id`/`name` to form inputs (Chrome autofill best-practice notice, 7 fields)
+- [ ] Wire recorded payments into the as-of rollups (currently projection-based)
+
 ## 2026-06-18 11:24 — Loan Division Tracker: Stages 1 & 2 built and shipped
 
 **Summary:** Built a browser-based React app that manages one bank loan divided among several people with variable-rate EMI tracking. Completed Stage 1 (pure decimal-safe calculation engine, 29 tests green) and Stage 2 (full transparent multi-borrower UI), verified end-to-end in a real browser, and pushed both to a new public GitHub repo.
