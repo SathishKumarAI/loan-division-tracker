@@ -1,0 +1,104 @@
+@import 'tailwindcss';
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+/*
+  Design system — Catppuccin (Latte light / Mocha dark).
+  Light is the default for a trustworthy, numbers-dense fintech surface;
+  dark mode flips to Mocha. Color carries meaning (semantic tokens below).
+*/
+@theme {
+  --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, 'SF Mono', monospace;
+
+  /* Catppuccin Latte (light surface) */
+  --color-base: #eff1f5;
+  --color-mantle: #e6e9ef;
+  --color-crust: #dce0e8;
+  --color-surface0: #ccd0da;
+  --color-surface1: #bcc0cc;
+  --color-overlay0: #9ca0b0;
+  --color-subtext0: #6c6f85;
+  --color-text: #4c4f69;
+
+  --color-card: #ffffff;
+
+  /* Accents (Latte) */
+  --color-blue: #1e66f5;
+  --color-sky: #04a5e5;
+  --color-teal: #179299;
+  --color-green: #40a02b;
+  --color-yellow: #df8e1d;
+  --color-peach: #fe640b;
+  --color-red: #d20f39;
+  --color-mauve: #8839ef;
+  --color-pink: #ea76cb;
+  --color-lavender: #7287fd;
+
+  /* Semantic */
+  --color-primary: #1e66f5;
+  --color-principal: #1e66f5;
+  --color-interest: #fe640b;
+  --color-positive: #40a02b;
+  --color-negative: #d20f39;
+  --color-warning: #df8e1d;
+}
+
+/* Catppuccin Mocha (dark surface) */
+.dark {
+  --color-base: #1e1e2e;
+  --color-mantle: #181825;
+  --color-crust: #11111b;
+  --color-surface0: #313244;
+  --color-surface1: #45475a;
+  --color-overlay0: #6c7086;
+  --color-subtext0: #a6adc8;
+  --color-text: #cdd6f4;
+
+  --color-card: #181825;
+
+  --color-blue: #89b4fa;
+  --color-sky: #89dceb;
+  --color-teal: #94e2d5;
+  --color-green: #a6e3a1;
+  --color-yellow: #f9e2af;
+  --color-peach: #fab387;
+  --color-red: #f38ba8;
+  --color-mauve: #cba6f7;
+  --color-pink: #f5c2e7;
+  --color-lavender: #b4befe;
+
+  --color-primary: #89b4fa;
+  --color-principal: #89b4fa;
+  --color-interest: #fab387;
+  --color-positive: #a6e3a1;
+  --color-negative: #f38ba8;
+  --color-warning: #f9e2af;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  background-color: var(--color-base);
+  color: var(--color-text);
+  font-family: var(--font-sans);
+  margin: 0;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Tabular figures everywhere money is shown */
+.tnum {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum';
+}
+
+/* Focus ring for accessibility (WCAG 2.2) */
+:where(button, a, input, select, [tabindex]):focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
